@@ -1,16 +1,9 @@
-select
-    ORDER_ID,
-    USER_ID,
-    PROMO_ID,
-    ADDRESS_ID,
-    CREATED_AT,
-    ORDER_COST,
-    SHIPPING_COST,
-    ORDER_TOTAL,
-    TRACKING_ID,
-    SHIPPING_SERVICE,
-    ESTIMATED_DELIVERY_AT,
-    DELIVERED_AT, 
-    STATUS
-from 
-    {{ source('postgres', 'orders')}}
+SELECT USER_ID,
+       FIRST_NAME,
+       LAST_NAME,
+       EMAIL,
+       PHONE_NUMBER,
+       CREATED_AT,
+       UPDATED_AT,
+       ADDRESS_ID
+FROM {{ source('postgres', 'users')}}

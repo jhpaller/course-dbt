@@ -6,5 +6,11 @@ sources:
     schema: public
 
     tables:
-      - name: users
+      - name: addresses
+      - name: events
       - name: orders
+      - name: order_items
+      - name: products
+      - name: promos
+      - name: superheroes
+      - name: users
