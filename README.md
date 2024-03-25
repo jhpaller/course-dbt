@@ -19,16 +19,14 @@ Answer: 130
 
 ### 2. On average, how many orders do we receive per hour?
 ``` 
-WITH SUMMARY AS (SELECT DATEADD(HOUR,
-                                DATE_PART(HOUR, CREATED_AT),
-                                CREATED_AT::DATE) AS HOUR_BUCKET,
-                        COUNT(*)                  AS ORDER_COUNT
+WITH SUMMARY AS (SELECT DATE_TRUNC(HOUR, CREATED_AT) AS HOUR_BUCKET,
+                        COUNT(*)                     AS ORDER_COUNT
                  FROM STG_POSTGRES__ORDERS
                  GROUP BY HOUR_BUCKET)
 SELECT AVG(ORDER_COUNT)
 FROM SUMMARY;
 ```
-Answer: 7.5
+Answer: 7.5 (7.520833 rounded)
 
 ### 3. On average, how long does an order take from being placed to being delivered?
 ``` 
@@ -36,7 +34,7 @@ SELECT AVG(DATEDIFF(DAY, CREATED_AT, DELIVERED_AT))
 FROM STG_POSTGRES__ORDERS
 WHERE STATUS = 'delivered';
 ```
-Answer: 4 days (rounded)
+Answer: 4 days (3.891803 rounded)
 
 ### 4. How many users have only made one purchase? Two purchases? Three+ purchases?
 ``` 
@@ -53,13 +51,11 @@ Answer: 25 (single), 28 (two), 71 (three or more)
 
 ### 5. On average, how many unique sessions do we have per hour?
 ``` 
-WITH SUMMARY AS (SELECT DATEADD(HOUR,
-                                DATE_PART(HOUR, CREATED_AT),
-                                CREATED_AT::DATE)  AS HOUR_BUCKET,
-                        COUNT(DISTINCT SESSION_ID) AS UNIQUE_SESSION_COUNT
+WITH SUMMARY AS (SELECT DATE_TRUNC(HOUR, CREATED_AT) AS HOUR_BUCKET,
+                        COUNT(DISTINCT SESSION_ID)   AS UNIQUE_SESSION_COUNT
                  FROM STG_POSTGRES__EVENTS
                  GROUP BY HOUR_BUCKET)
 SELECT AVG(UNIQUE_SESSION_COUNT)
 FROM SUMMARY;
 ```
-Answer: 16.3 (rounded)
+Answer: 16.3 (16.327586 rounded)
