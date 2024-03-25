@@ -10,13 +10,14 @@ USE WAREHOUSE TRANSFORMER_DEV_WH;
 
 ## Week 1 questions:
 
-1. How many users do we have?
+### 1. How many users do we have?
 ``` 
 SELECT COUNT(*)
 FROM STG_POSTGRES__USERS;
 ```
 Answer: 130
-2. On average, how many orders do we receive per hour?
+
+### 2. On average, how many orders do we receive per hour?
 ``` 
 WITH SUMMARY AS (SELECT DATEADD(HOUR,
                                 DATE_PART(HOUR, CREATED_AT),
@@ -28,14 +29,16 @@ SELECT AVG(ORDER_COUNT)
 FROM SUMMARY;
 ```
 Answer: 7.5
-3. On average, how long does an order take from being placed to being delivered?
+
+### 3. On average, how long does an order take from being placed to being delivered?
 ``` 
 SELECT AVG(DATEDIFF(DAY, CREATED_AT, DELIVERED_AT))
 FROM STG_POSTGRES__ORDERS
 WHERE STATUS = 'delivered';
 ```
 Answer: 4 days (rounded)
-4. How many users have only made one purchase? Two purchases? Three+ purchases?
+
+### 4. How many users have only made one purchase? Two purchases? Three+ purchases?
 ``` 
 WITH USER_METRICS AS (SELECT USER_ID,
                              COUNT(*) AS ORDER_COUNT
@@ -47,7 +50,8 @@ SELECT COUNT_IF(ORDER_COUNT = 1) AS USERS_WITH_1_ORDER,
 FROM USER_METRICS;
 ```
 Answer: 25 (single), 28 (two), 71 (three or more)
-5. On average, how many unique sessions do we have per hour?
+
+### 5. On average, how many unique sessions do we have per hour?
 ``` 
 WITH SUMMARY AS (SELECT DATEADD(HOUR,
                                 DATE_PART(HOUR, CREATED_AT),
