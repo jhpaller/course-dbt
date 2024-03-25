@@ -14,6 +14,7 @@ models:
       - name: ZIPCODE
       - name: STATE
       - name: COUNTRY
+
   - name: stg_postgres__events
     description: "Events related to user interactions"
     columns:
@@ -29,6 +30,7 @@ models:
       - name: EVENT_TYPE
       - name: ORDER_ID
       - name: PRODUCT_ID
+
   - name: stg_postgres__orders
     description: "Orders placed by users"
     columns:
@@ -49,6 +51,7 @@ models:
       - name: ESTIMATED_DELIVERY_AT
       - name: DELIVERED_AT
       - name: STATUS
+
   - name: stg_postgres__order_items
     description: "Items contained in user orders"
     columns:
@@ -59,6 +62,7 @@ models:
           - not_null
       - name: PRODUCT_ID
       - name: QUANTITY
+
   - name: stg_postgres__products
     description: "Products available for purchase"
     columns:
@@ -70,6 +74,7 @@ models:
       - name: NAME
       - name: PRICE
       - name: INVENTORY
+
   - name: stg_postgres__promos
     description: "Promotions that can be applied to orders"
     columns:
@@ -80,6 +85,7 @@ models:
           - not_null
       - name: DISCOUNT
       - name: STATUS
+
   - name: stg_postgres__users
     description: "Users of greenery"
     columns:

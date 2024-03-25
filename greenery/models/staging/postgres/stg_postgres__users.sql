@@ -1,3 +1,9 @@
+{{
+  config(
+    materialized='view'
+  )
+}}
+
 SELECT USER_ID,
        FIRST_NAME,
        LAST_NAME,

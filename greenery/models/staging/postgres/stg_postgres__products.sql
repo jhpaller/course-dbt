@@ -1,3 +1,9 @@
+{{
+  config(
+    materialized='view'
+  )
+}}
+
 SELECT PRODUCT_ID,
        NAME,
        PRICE,

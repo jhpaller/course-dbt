@@ -1,3 +1,9 @@
+{{
+  config(
+    materialized='view'
+  )
+}}
+
 SELECT ORDER_ID,
        USER_ID,
        PROMO_ID,

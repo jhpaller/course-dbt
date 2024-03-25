@@ -1,3 +1,9 @@
+{{
+  config(
+    materialized='view'
+  )
+}}
+
 SELECT EVENT_ID,
        SESSION_ID,
        USER_ID,
