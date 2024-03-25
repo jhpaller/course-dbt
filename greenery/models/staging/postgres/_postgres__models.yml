@@ -1,0 +1,97 @@
+
+version: 2
+
+models:
+  - name: stg_postgres__addresses
+    description: "Addresses to send orders or associated with users"
+    columns:
+      - name: ADDRESS_ID
+        description: "The primary key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: ADDRESS
+      - name: ZIPCODE
+      - name: STATE
+      - name: COUNTRY
+  - name: stg_postgres__events
+    description: "Events related to user interactions"
+    columns:
+      - name: EVENT_ID
+        description: "The primary key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: SESSION_ID
+      - name: USER_ID
+      - name: PAGE_URL
+      - name: CREATED_AT
+      - name: EVENT_TYPE
+      - name: ORDER_ID
+      - name: PRODUCT_ID
+  - name: stg_postgres__orders
+    description: "Orders placed by users"
+    columns:
+      - name: ORDER_ID
+        description: "The primary key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: USER_ID
+      - name: PROMO_ID
+      - name: ADDRESS_ID
+      - name: CREATED_AT
+      - name: ORDER_COST
+      - name: SHIPPING_COST
+      - name: ORDER_TOTAL
+      - name: TRACKING_ID
+      - name: SHIPPING_SERVICE
+      - name: ESTIMATED_DELIVERY_AT
+      - name: DELIVERED_AT
+      - name: STATUS
+  - name: stg_postgres__order_items
+    description: "Items contained in user orders"
+    columns:
+      - name: ORDER_ID
+        description: "The primary key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: PRODUCT_ID
+      - name: QUANTITY
+  - name: stg_postgres__products
+    description: "Products available for purchase"
+    columns:
+      - name: PRODUCT_ID
+        description: "The primary key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: NAME
+      - name: PRICE
+      - name: INVENTORY
+  - name: stg_postgres__promos
+    description: "Promotions that can be applied to orders"
+    columns:
+      - name: PROMO_ID
+        description: "The primary key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: DISCOUNT
+      - name: STATUS
+  - name: stg_postgres__users
+    description: "Users of greenery"
+    columns:
+      - name: USER_ID
+        description: "The primary key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: FIRST_NAME
+      - name: LAST_NAME
+      - name: EMAIL
+      - name: PHONE_NUMBER
+      - name: CREATED_AT
+      - name: UPDATED_AT
+      - name: ADDRESS_ID

@@ -11,4 +11,4 @@ SELECT ORDER_ID,
        ESTIMATED_DELIVERY_AT,
        DELIVERED_AT,
        STATUS
-FROM {{ SOURCE('postgres', 'orders')}}
+FROM {{ source('postgres', 'orders')}}
