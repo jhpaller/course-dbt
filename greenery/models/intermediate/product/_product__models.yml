@@ -1,0 +1,32 @@
+
+version: 2
+
+models:
+  - name: int_product__sessions
+    description: "intermediate interface to extract sessions from events and validate assumptions about data characteristic"
+    columns:
+      - name: SESSION_ID
+        description: "The primary key for this table"
+        tests:
+          - unique
+          - not_null
+      - name: USER_ID
+      - name: ORDER_ID
+        description: "Calculated only for validating data assumptions"
+        tests:
+          - unique:
+              config:
+                where: "ORDER_ID IS NOT NULL"
+      - name: USER_PER_SESSION
+        description: "Calculated only for validating data assumptions"
+        tests:
+          - accepted_values:
+              values: [1]
+              quote: false
+      - name: ORDER_PER_SESSION
+        tests:
+          - accepted_values:
+              values: [0,1]
+              quote: false
+      - name: SESSION_START
+      - name: SESSION_END
