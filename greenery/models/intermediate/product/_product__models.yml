@@ -30,3 +30,11 @@ models:
               quote: false
       - name: SESSION_START
       - name: SESSION_END
+  - name: int_order_products
+    description: "intermediate interface to simplify stat retrieval for orders"
+    columns:
+      - name: ORDER_ID
+      - name: PRODUCT_ID
+      - name: UNIT_PRICE
+      - name: QUANTITY,
+      - name: ORDER_PRICE
