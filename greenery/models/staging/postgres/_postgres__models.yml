@@ -56,10 +56,6 @@ models:
     description: "Items contained in user orders"
     columns:
       - name: ORDER_ID
-        description: "The primary key for this table"
-        tests:
-          - unique
-          - not_null
       - name: PRODUCT_ID
       - name: QUANTITY
 

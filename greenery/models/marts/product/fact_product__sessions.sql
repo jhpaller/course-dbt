@@ -1,5 +1,5 @@
 
-WITH SESSIONS AS (SELECT * FROM {{ ref('int_product__sessions')}}),
+WITH SESSIONS AS (SELECT * FROM {{ ref('int_product__sessions')}})
 SELECT SESSION_ID,
        USER_ID,
        ORDER_ID,
