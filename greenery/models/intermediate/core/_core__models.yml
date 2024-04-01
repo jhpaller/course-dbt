@@ -30,6 +30,7 @@ models:
               quote: false
       - name: SESSION_START
       - name: SESSION_END
+
   - name: int_order_products
     description: "intermediate interface to simplify stat retrieval for orders"
     columns:
