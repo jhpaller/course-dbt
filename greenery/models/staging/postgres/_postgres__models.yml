@@ -28,6 +28,10 @@ models:
       - name: PAGE_URL
       - name: CREATED_AT
       - name: EVENT_TYPE
+        description: "Event types gets pivoted downstream, early signal of new types is necessary"
+        tests:
+          - accepted_values:
+              values: ['page_view','add_to_cart','checkout','package_shipped']
       - name: ORDER_ID
       - name: PRODUCT_ID
 
