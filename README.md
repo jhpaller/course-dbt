@@ -2,7 +2,7 @@
 
 
 All queries run in a session with
-``` snowflake
+``` sql
 USE ROLE TRANSFORMER_DEV;
 USE SCHEMA DEV_DB.DBT_JPALLERGMAILCOM;
 USE WAREHOUSE TRANSFORMER_DEV_WH;
@@ -12,7 +12,7 @@ USE WAREHOUSE TRANSFORMER_DEV_WH;
 
 ### Part 1. Models
 #### What is our user repeat rate?
-``` snowflake
+``` sql
 -- using the staging models
 WITH USER_METRICS AS (SELECT USER_ID,
                              COUNT(*) AS ORDER_COUNT
