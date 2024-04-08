@@ -1,0 +1,9 @@
+
+macros:
+  - name: sum_of
+    description: Aggregation function to count instances where the column matches a specific value
+    arguments:
+      - name: col_name
+        description: name of the column to check
+      - name: col_value
+        description: value to compare against the column

@@ -1,0 +1,11 @@
+
+macros:
+  - name: row_number
+    description: Simplify generating row numbers. Naive implementation, field lists aren't handled, instead assumption is 1 column or comma separated list. Alternate implementation could have the last 2 arguments combined
+    arguments:
+      - name: partition_by
+        description: comma separated list of columns to partition on
+      - name: order_by
+        description: comma separated list of columns to order by
+      - name: asc_or_desc
+        description: asc or desc values. implicitly assumes one order by column, NULLS FIRST/LAST still supported

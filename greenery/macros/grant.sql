@@ -3,7 +3,7 @@
     {% set sql %}
       GRANT USAGE ON SCHEMA {{ schema }} TO ROLE {{ role }};
       GRANT SELECT ON {{ this }} TO ROLE {{ role }};
-{% endset %}
+    {% endset %}
 
     {% set table = run_query(sql) %}
 
