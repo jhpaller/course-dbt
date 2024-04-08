@@ -1,7 +1,4 @@
 
-WITH PRODUCTS AS (SELECT * FROM {{ ref('stg_postgres__products')}})
-SELECT PRODUCT_ID,
-       NAME,
-       PRICE,
-       INVENTORY
-FROM PRODUCTS
+select
+    {{ dbt_utils.star(from=ref('stg_postgres__products')) }}
+from {{ ref('stg_postgres__products') }}

@@ -1,6 +1,4 @@
 
-WITH PROMOS AS (SELECT * FROM {{ ref('stg_postgres__promos')}})
-SELECT PROMO_ID,
-       DISCOUNT,
-       STATUS
-FROM PROMOS
+select
+    {{ dbt_utils.star(from=ref('stg_postgres__promos')) }}
+from {{ ref('stg_postgres__promos') }}
