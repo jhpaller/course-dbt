@@ -8,83 +8,120 @@ USE SCHEMA DEV_DB.DBT_JPALLERGMAILCOM;
 USE WAREHOUSE TRANSFORMER_DEV_WH;
 ```
 
-## Week 2 questions:
+## Week 3 questions:
 
-### Part 1. Models
-#### What is our user repeat rate?
+### Part 1
+#### What is our overall conversion rate?
+
 ``` sql
--- using the staging models
-WITH USER_METRICS AS (SELECT USER_ID,
-                             COUNT(*) AS ORDER_COUNT
-                      FROM STG_POSTGRES__ORDERS
-                      GROUP BY USER_ID)
-SELECT COUNT_IF(ORDER_COUNT > 1) / COUNT(*)
-FROM USER_METRICS;
+-- defensive version, slightly unnecessary given FACT_PAGE_VIEWS construction
+WITH PURCHASES AS (SELECT COUNT(DISTINCT SESSION_ID) AS SESSION_COUNT
+                   FROM FACT_PAGE_VIEWS
+                   WHERE CHECKOUT_COUNT > 0),
+     VIEWS AS (SELECT COUNT(DISTINCT SESSION_ID)     AS SESSION_COUNT
+               FROM FACT_PAGE_VIEWS
+               WHERE PAGE_VIEW_COUNT > 0)
+SELECT PURCHASES.SESSION_COUNT / VIEWS.SESSION_COUNT AS CONVERSION_RATE
+FROM PURCHASES,
+     VIEWS;
 
--- using the newly modeled data
-SELECT COUNT_IF(ORDER_COUNT > 1) / COUNT(*)
+-- simple version using existing user order aggregation
+SELECT SUM(ORDER_COUNT) / SUM(SESSION_COUNT) AS CONVERSION_RATE
 FROM FACT_USER_ORDER;
 ```
-Answer: 80% (0.798387 rounded)
+Answer: 62.5% (0.624567 rounded)
 
-#### What are good indicators of a user who will likely purchase again? What about indicators of users who are likely NOT to purchase again? If you had more data, what features would you want to look into to answer this question?
-* What are good indicators of a user who will likely purchase again? 
-  * delivery occurred and shipping time was in line with the estimate
-  * multiple products purchased
-  * they were able to use a discount but it wasn't necessarily a substantial share of the order
-  * purchase was made on their first visit to the site
-* What about indicators of users who are likely NOT to purchase again?
-  * no delivery or long shipping relative to estimate 
-  * single product or item
-* If you had more data, what features would you want to look into to answer this question?
-  * what was inventory at the time of the order?
-  * had previously used coupons expired?
+#### What is our conversion rate by product?
 
-#### See code
-* greenery/models/intermediate/core/int_order_products.sql
-* greenery/models/intermediate/core/int_sessions.sql
-* greenery/models/marts/core/dim_products.sql
-* greenery/models/marts/core/dim_users.sql
-* greenery/models/marts/core/fact_orders.sql
-* greenery/models/marts/core/fact_sessions.sql
-* greenery/models/marts/marketing/dim_promos.sql
-* greenery/models/marts/marketing/fact_user_order.sql
-* greenery/models/marts/product/fact_page_views.sql
+``` sql
+-- defensive version, but unnecessary given FACT_PAGE_VIEWS construction
+WITH PRODUCT_SESSIONS AS (SELECT DP.NAME                      AS PRODUCT_NAME,
+                                 SESSION_ID,
+                                 COUNT(*)                     AS VIEW_COUNT,
+                                 COUNT_IF(CHECKOUT_COUNT > 0) AS PURCHASE_COUNT
+                          FROM FACT_PAGE_VIEWS AS FPV
+                                   JOIN DIM_PRODUCTS AS DP USING (PRODUCT_ID)
+                          WHERE PAGE_VIEW_COUNT > 0
+                          GROUP BY 1, 2)
+SELECT PRODUCT_NAME,
+       SUM(PURCHASE_COUNT) / SUM(VIEW_COUNT) AS CONVERSION_RATE
+FROM PRODUCT_SESSIONS
+GROUP BY 1
+ORDER BY 1;
 
-#### Explain the product mart models you added. Why did you organize the models in the way you did?
+-- clean version
+SELECT DP.NAME                                 AS PRODUCT_NAME,
+       COUNT_IF(CHECKOUT_COUNT > 0) / COUNT(*) AS CONVERSION_RATE
+FROM FACT_PAGE_VIEWS AS FPV
+         JOIN DIM_PRODUCTS AS DP USING (PRODUCT_ID)
+GROUP BY 1
+ORDER BY 1;
+```
+Answer: varies from 34.4% (Pothos) to 60.1% (String of pearls)
 
- * I added an intermediary model for core purely for general purpose abstraction. 
-   * There is no team specific logic or intended usage here
-   * Intermediary transformations made it possible to add tests to validate assumptions in the data
-     * 1 user per session
-     * 0 or 1 order per session
- * I added core, marketing and product marts, partially with an eye towards scope/security
-   * general dimensions and granular fact interfaces are exposed in core
-   * promo dimensions are only exposed to marketing, along with an interface to explore user interaction across sessions/orders
-   * product centric view on interaction and purchases of products is exposed in the product mart
-   * addresses are not exposed to anyone for sensitivity until abstracted
+### Part 2
+#### Create a macro to simplify part of a model(s)
+* row_number 
+  * simplify the generation of row_number to persist the ability to order ascending or descending (est first or last)
+  * Used in fact_sessions and fact_orders 
+* sum_of
+  * clean and simplify the aggregated pivot of page visits, easily extensible
+  * used in fact_page_views
 
-### Part 2. Tests
-#### Add dbt tests into your dbt project on your existing models from Week 1, and new models from the section above
-* What assumptions are you making about each model? (i.e. why are you adding each test?)
-  * full set of event types
-  * 1:1 user to session ratio
-  * 1:1 or missing order to session ratio
-  * primary keys are actually unique and not null
-* Did you find any “bad” data as you added and ran tests on your models? How did you go about either cleaning the data in the dbt model or adjusting your assumptions/tests?
-  * No, I focused more on the tests as a means of validating code and transformations rather than focusing on data issue
-  * given the particular data set it would be hard to make assumptions about how to fix the data (except potentially using events to supplement for some missing order data) and with the data set so small dropping rows would seem to distort as much as any subtly wrong data.
+### Part 3
+#### Add a post hook to your project to apply grants to the role “reporting”.
+```sql
+-- validation
+SHOW GRANTS TO ROLE REPORTING;
+SELECT $2 AS PRIVILEGE, 
+       $3 AS GRANTED_ON, 
+       $4 AS NAME
+FROM TABLE (RESULT_SCAN(LAST_QUERY_ID()))
+WHERE $6 = 'REPORTING'
+  AND $4 LIKE 'DEV_DB.DBT_JPALLERGMAILCOM.%';
 
-#### Explain how you would ensure these tests are passing regularly and how you would alert stakeholders about bad data getting through.
-Generally speaking I'd run tests daily and store the outputs and build some kind of report on that, but in practice there are lots of details around SLAs and implications of "bad" data. in some cases we may want to hault processing, alert, fix something and then rerun, in other cases we may simply be observing trends in bad data.
+--+---------+----------+----------------------------------------------------+
+--|PRIVILEGE|GRANTED_ON|NAME                                                |
+--+---------+----------+----------------------------------------------------+
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.DIM_PRODUCTS             |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.DIM_PROMOS               |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.DIM_USERS                |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.FACT_ORDERS              |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.FACT_PAGE_VIEWS          |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.FACT_SESSIONS            |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.FACT_USER_ORDER          |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.INT_ORDER_PRODUCTS       |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.INT_SESSIONS             |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.STG_POSTGRES__ADDRESSES  |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.STG_POSTGRES__EVENTS     |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.STG_POSTGRES__ORDERS     |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.STG_POSTGRES__ORDER_ITEMS|
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.STG_POSTGRES__PRODUCTS   |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.STG_POSTGRES__PROMOS     |
+--|SELECT   |VIEW      |DEV_DB.DBT_JPALLERGMAILCOM.STG_POSTGRES__USERS      |
+--+---------+----------+----------------------------------------------------+
+```
+### Part 4
+#### Install a package  and apply one or more of the macros to your project
 
-### Part 3. dbt Snapshots
-#### Which products had their inventory change from week 1 to week 2? 
+ * dbt-utils 
+   * dbt_utils.star
+     * dim_promos
+     * dim_products
+     * dim_user (and simplified PII removal)
+   * dbt_utils.group_by
+     * fact_page_views
+
+### Part 5
+#### see uploaded image
+
+### Part 6
+#### Which products had their inventory change from week 2 to week 3? 
 ``` sql
 WITH CHANGED_INVENTORY AS (SELECT *
                            FROM PRODUCTS_SNAPSHOT
-                           WHERE DATE_TRUNC(DAY, DBT_VALID_TO) = '2024-3-31'
-                              OR DATE_TRUNC(DAY, DBT_VALID_FROM) = '2024-3-31')
+                           WHERE DATE_TRUNC(DAY, DBT_VALID_TO) = '2024-4-8'
+                              OR DATE_TRUNC(DAY, DBT_VALID_FROM) = '2024-4-8')
 SELECT PRODUCT_ID,
        OLD.INVENTORY AS OLD_INVENTORY,
        NEW.INVENTORY AS NEW_INVENTORY
@@ -97,9 +134,11 @@ WHERE NEW.DBT_VALID_TO IS NULL
 --+------------------------------------+-------------+-------------+
 --|PRODUCT_ID                          |OLD_INVENTORY|NEW_INVENTORY|
 --+------------------------------------+-------------+-------------+
---|be49171b-9f72-4fc9-bf7a-9a52e259836b|77           |64           |
---|55c6a062-5f4a-4a8b-a8e5-05ea5e6715a3|51           |25           |
---|4cda01b9-62e2-46c5-830f-b7f262a58fb1|40           |20           |
---|fb0e8be7-5ac4-4a76-a1fa-2cc4bf0b2d80|58           |10           |
+--|689fb64e-a4a2-45c5-b9f2-480c2155624d|56           |44           |
+--|b66a7143-c18a-43bb-b5dc-06bb5d1d3160|89           |53           |
+--|be49171b-9f72-4fc9-bf7a-9a52e259836b|64           |50           |
+--|4cda01b9-62e2-46c5-830f-b7f262a58fb1|20           |0            |
+--|55c6a062-5f4a-4a8b-a8e5-05ea5e6715a3|25           |15           |
+--|fb0e8be7-5ac4-4a76-a1fa-2cc4bf0b2d80|10           |0            |
 --+------------------------------------+-------------+-------------+
 ```
