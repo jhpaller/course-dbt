@@ -11,7 +11,7 @@ SELECT SESSION_ID,
        SESSION_START,
        SESSION_END,
        {% for event_type in event_types %}
-       {{ sum_of('EVENT_TYPE', event_type) }} AS {{ event_type }},
+       {{ sum_of('EVENT_TYPE', event_type) }} AS {{ event_type }}_count,
        {% endfor %}
        DATEDIFF(MIN, SESSION_START, SESSION_END)         AS SESSION_LENGTH_MINUTES
 FROM EVENTS
