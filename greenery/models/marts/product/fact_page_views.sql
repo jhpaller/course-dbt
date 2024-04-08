@@ -11,14 +11,10 @@ SELECT SESSION_ID,
        SESSION_START,
        SESSION_END,
        {% for event_type in event_types %}
-       {{ sum_of('EVENT_TYPE', event_type) }} AS {{ event_type }}s,
+       {{ sum_of('EVENT_TYPE', event_type) }} AS {{ event_type }},
        {% endfor %}
-       --SUM(DECODE(EVENT_TYPE, 'page_view', 1, 0))        AS PAGE_VIEWS,
-       --SUM(DECODE(EVENT_TYPE, 'add_to_cart', 1, 0))      AS ADD_TO_CART,
-       --SUM(DECODE(EVENT_TYPE, 'checkout', 1, 0))         AS CHECKOUT,
-       --SUM(DECODE(EVENT_TYPE, 'package_shipped', 1, 0))  AS PACKAGE_SHIPPED,
        DATEDIFF(MIN, SESSION_START, SESSION_END)         AS SESSION_LENGTH_MINUTES
 FROM EVENTS
          LEFT JOIN ORDER_ITEMS USING (ORDER_ID)
          JOIN SESSIONS USING (SESSION_ID)
-GROUP BY {{ dbt_utils.group_by(n=5) }}
+{{ dbt_utils.group_by(n=5) }}
